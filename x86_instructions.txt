@@ -1,0 +1,154 @@
+﻿# x86 native code sequences for reflect_ilc.
+# still a work in progress.
+
+add : I4, I4 -> I4
+	pop eax
+	pop ebx
+	add eax, ebx
+	push eax
+	
+ldc.i4, ldc.i4.s : () -> I4
+	mov eax, %imm
+	push eax
+	
+ldloc, ldloc.s : () -> %local_type[%imm]
+	mov eax, [ebp - %local_offset[%imm]]
+	push eax
+	
+ldloca, ldloca.s : () -> I4
+	lea eax, ebp - %local_offset[%imm]
+	
+stloc, stloc.s : %local_type[%imm] -> ()
+	pop eax
+	mov eax, [ebp - %local_offset[%imm]]
+	
+ldarg, ldarg.s : () -> %arg_type[%imm]
+	mov eax, [ebp + %arg_offset[%imm]]
+	push eax
+	
+and : I4, I4 -> I4
+	pop eax
+	pop ebx
+	and eax, ebx
+	push eax
+
+beq, beq.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	je %targ
+	
+bge, bge.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jge %targ
+	
+bge.un, bge.un.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jae %targ
+	
+bgt, bgt.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jg %targ
+	
+bgt.un, bgt.un.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	ja %targ
+	
+ble, ble.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jle %targ
+	
+ble.un, ble.un.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jbe %targ
+	
+blt, blt.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jl %targ
+	
+blt.un, blt.un.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jb %targ
+	
+bne, bne.s : I4, I4 -> ()
+	pop eax
+	pop ebx
+	cmp eax, ebx
+	jne %targ
+	
+br, br.s : () -> ()
+	jmp %targ
+	
+break : () -> ()
+	int 3
+	
+brfalse, brfalse.s : I4 -> ()
+	pop eax
+	cmp eax, 0
+	jz %targ
+	
+brtrue, brtrue.s : I4 -> ()
+	pop eax
+	cmp eax, 0
+	jnz %targ
+	
+# todo: call, calli, ceq, cgt, cgt.un, ckfinite, clt, clt.un
+
+call : %tok_args -> %tok_ret
+	call %tok_symbol
+	add esp, %tok_args_size
+	push eax
+
+conv.u1 : I4 -> I4
+	pop eax
+	movsz eax, al
+	push eax
+
+dup : %top -> %top, %top
+	pop eax
+	push eax
+	push eax
+	
+stfld : %tok_decltype, %tok_type -> ()
+	pop eax
+	pop ebx
+	mov [ebx + %tok_fieldofs], ebx
+	
+stfld : I4, %tok_type -> ()
+	pop eax
+	pop ebx
+	mov [ebx + %tok_fieldofs], ebx
+	
+ret : I4 -> ()
+	pop eax
+	ret
+	
+ret : Ref -> ()
+	pop eax
+	ret
+	
+ret : () -> ()
+	ret
+
+ret : %top -> ()
+	*** don't actually know how to return valuetype yet ***
+	
+newobj : %tok_args -> %tok_ret
+	xor eax, eax			# todo: allocate memory, call ctor
+	push eax
